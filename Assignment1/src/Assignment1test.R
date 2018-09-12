@@ -1,0 +1,1 @@
+nhgh <- read.dta(file = "../data/nhgh.dta")
