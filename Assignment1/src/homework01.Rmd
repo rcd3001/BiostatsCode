@@ -2,16 +2,10 @@
 title: "Homework 1: Graphical Exploration with GGplot and Numerical Summaries - Biostatistics I"
 author: "Ryan Duggan"
 date: "September 15, 2018"
-output:
-  #pdf_document:
-  #  fig_height: 3.5
-  #  fig_width: 3.5
-  html_document:
-    fig_height: 4.5
-    fig_width: 4.5
+output: pdf_document
 ---
 
-```{r,echo=FALSE}
+```{r echo=FALSE}
 knitr::opts_chunk$set(cache=TRUE, error=TRUE, message=TRUE, warning=TRUE)
 #loading tidyverse + other necessary packages 
 library(tidyverse)
@@ -78,7 +72,7 @@ grid.arrange(plot3, plot4, nrow = 1)
 
 ## c) Make a density plot of the gylcohemoglobin data with a different curve for patients using insulin (tx = 1) and patients not using insulin (tx = 0).
 For this question, you should use different colors for the different densities.
-```{r echo = T, fig.width = 10}
+```{r echo = T, fig.width = 7.5, fig.align = "center"}
 ggplot(data = nhgh, aes(x = gh, fill = tx))+
   geom_density(position = "stack", alpha = 0.5)+
   ggtitle("Density Plot of Gycohemoglobin (Gh) Percentage by Diabetes Treatment Status")+
@@ -92,7 +86,7 @@ These plots are showing the frequency of occurences of glycohemoglobin percentag
 
 This pattern holds up when breaking down Gh by DM diagnosis instead of treatment type, which would be expected as Gh levels are correlated with the presence of diabetes, and presumably patients without diabetes would not be receiving treatment. (See below.)
 
-```{r echo = T, fig.width = 10}
+```{r echo = T, fig.width = 7.5, fig.align = "center"}
 group_by(nhgh, tx) %>% 
   summarize(., mean = mean(gh, na.rm = T), median = median(gh, na.rm = T), sd = sd(gh, na.rm = T)) %>%
   kable(col.names = c("Treatment Status", "Mean", "Median", "Standard Deviation")) %>%
@@ -110,7 +104,7 @@ ggplot(data = nhgh, aes(x = gh, fill = dx))+
 # Question 3 - Race/Ethnicity
 
 ## a) Create a figure showing the relative numbers in each race/ethnicity within the insulin and no insulin groups
-```{r echo = T, fig.width = 10}
+```{r echo = T, fig.width = 7.5, fig.height = 5, fig.align = "center"}
 ggplot(data=nhgh, aes(x = tx, fill = re))+
   geom_bar(position = "fill")+  #this makes the bars proportional instead of absolute
   ggtitle("Bar Graph of Diabetes Treatment Status by Race")+
@@ -118,21 +112,32 @@ ggplot(data=nhgh, aes(x = tx, fill = re))+
 ```
 
 ## b) Summarize what you see in the figure.
-
+This graph shows that roughly equal (or at least very similar) proportions of each racial group receive each treatment type, with minority (non-white) groups tending to have a higher proportion receiving treatment than not. 
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 
 # Question 4 -  BMI and race
 
 ## a) Make side-by-side boxplots of BMI for each race.
-```{r}
+```{r echo=T, fig.width= 7.5, fig.align = "center"}
+ggplot(data = nhgh, aes(x=re, y = bmi))+
+  geom_boxplot()+
+  ggtitle("Boxplot of BMI by Race")+
+  labs(x = "", y = "BMI")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ## b) Create a table that contains each of the following values of the BMI for each race: mean, median, min, max, standard deviation, and IQR
-```{r}
+```{r echo = T, fig.width = 7.5, fig.align = "center"}
+nhghByRace <- group_by(nhgh, re)
+nhghByRace %>%
+  summarize(., mean = mean(bmi), median = median(bmi), sd = sd(bmi), IQR = IQR(bmi), min = min(bmi), max = max(bmi))%>%
+  kable(col.names = c("Race", "Mean", "Median", "Standard Deviation", "IQR", "Minimum", "Maximum")) %>%
+  kable_styling(bootstrap_options = "striped")
 ```
 
 ## c) Describe how BMI differs among the races
+Although test for statistical significance were not carried out, the boxplots and summary statistics indicate that average BMI is similar across different races, with the highest mean and median being found in the Non-Hispanic Black group, and the lowest being the "Other Race" group. Aside from this difference, BMI seems to be normally distributed in all racial groups.
 
 &nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -140,9 +145,13 @@ ggplot(data=nhgh, aes(x = tx, fill = re))+
 
 ## a) Make a scatter plot of gylcohemoglobin versus BMI colored by insulin use
 
-```{r}
+```{r echo = T, fig.width = 7.5, fig.align = "center"}
+ggplot(data = nhgh)+
+  geom_point(aes(x = bmi, y = gh, color = tx), size = 2, alpha = 0.5)+
+  ggtitle("Scatterplot of BMI and Gh Measurement by Diabetes Treatment Status")+
+  scale_color_discrete(name = "Insulin Treatment")
 ```
 
 ## b) Describe what you see in the plot.
-
+There appears to be a very strong clustering of lower BMI and lower Gh percentages in patients not being treated for diabetes, with even otherwise healthy patients with higher BMIs tending to have low Gh levels. Patients who are receiving insulin or other treatments have a wider spread of Gh levels, with a tendency to cluster at a slightly higher level compared to the No Treatment group, while also tending to remain in a similar range of BMI.
 
