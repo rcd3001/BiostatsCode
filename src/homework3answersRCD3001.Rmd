@@ -1,0 +1,413 @@
+---
+title: "Homework Three"
+author: "Ryan Duggan"
+date: "2 October 2018"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+```{r echo=T}
+knitr::opts_chunk$set(cache=TRUE, error=TRUE, message=TRUE, warning=TRUE)
+#loading tidyverse + other necessary packages 
+library(tidyverse)
+library(stats)
+```
+
+
+Human papillomavirus (HPV) is the most common sexually transmitted infection in the United States. Some HPV types can cause genital warts and are considered low risk, with a small chance for causing cancer. Other types are considered high risk, causing cancer in different areas of the body
+including the cervix and vagina in women, penis in men, and anus and oropharynx in both men and women. A report provides the most recent national estimates of genital HPV prevalence among adults aged 18–59 from the National Health and Nutrition Examination Survey (NHANES) 2013–2014. During 2013–2014, prevalence of any genital HPV was 42.5% among adults aged 18–59. This information applies to Questions 1-4.
+
+#Question 1: Sampling distribution for a sample proportion
+
+**1(a) If we use a sample proportion, $P$, based on a sample of size $n = 20$, to estimate the population proportion, $\pi = 0.425$, would it be very surprising to get an estimate that is off by more than 0.10 (that is, the sample proportion is less than 0.325 or greater than 0.525)? Support your answer.**
+---
+It would not be very surprising to get an estimate that differs from the population proportion by more than 0.10 with a sample size of 20. This is shown by the fact that the probability of getting an estimate that differs from the population proportion by more than 0.10 is 0.377.
+
+```{r definition}
+# Generating sample to use in Question 1
+sampDistFun <- function(sampSize){
+  set.seed(42)
+  (rbinom(5000, sampSize, 0.425))/sampSize
+}
+
+#Calculating Pr(P<0.325 | P>0.525) with n = 20, pi = 0.425
+
+sampDist20 <- sampDistFun(20)
+sampProp1 <-((sum(sampDist20 < 0.325 | sampDist20 > 0.525))/5000)
+```
+
+
+
+
+**1(b) If we use a sample proportion, $P$, based on a sample of size $n = 100$, to estimate the population proportion, $\pi = 0.425$, would it be very surprising to get an estimate that is off by more than 0.10? Support your answer.**
+
+---
+
+It would be relatively surprising to get an estimate that differs from the population proportion more than 0.10 with a sample size of 100. The above calculation indicates that the probability of obtaining an estimate that falls outside of the 0.10 range is 0.0378, or 3.78 %.
+
+```{r}
+#1b) n = 100,  pi = 0.425
+sampDist100 <- sampDistFun(100)
+sampProp2 <- ((sum(sampDist100 < 0.325 | sampDist100 > 0.525))/5000)
+```
+
+**1(c) If we use a sample proportion, P, based on a sample of size n = 500, to estimate the population proportion, pi = 0.425, would it be very surprising to get an estimate that is off by more than 0.10? Support your answer.**
+
+---
+
+With a sample size of 500, the probability of getting a sample proportion more than 0.10 more extreme than the population proportion is 0. It is thus impossible that this would occur.
+```{r}
+#1c) n = 500
+sampDist500 <- sampDistFun(500)
+sampProp3 <- ((sum(sampDist500 < 0.325 | sampDist500 > 0.525))/5000)
+```
+
+**1(d) If we use a sample proportion, $P$, based on a sample of size $n = 20$, to estimate the population proportion, pi = 0.425$, would it be very surprising to get an estimate that is off by more than 0.05 (that is, the sample proportion is less than 0.375 or greater than 0.475)? Support your answer.**
+
+---
+
+Based on these results, it would not be surprising to get an estimate that differs from 0.425 by more than 0.05 with a sample size of 20, as the probability that this would occur is 0.6596. The table printed below contains estimates for questions 1D-1F.
+```{r}
+#samples 20, 100, 500 at 0.05 alpha
+sampPropTest <- vector()
+for(i in c(20,100, 500)){
+  sampDistTemp <- sampDistFun(i)
+  sampPropTemp <- ((sum(sampDistTemp < 0.375 | sampDistTemp > 0.475))/5000)
+  sampPropTest <- cbind(sampPropTest, sampPropTemp)
+}
+colnames(sampPropTest) <- c("n = 20", "n = 100", "n = 500")
+
+print(sampPropTest)
+```
+
+**1(e) If we use a sample proportion, P, based on a sample of size n = 100, to estimate the population proportion, pi = 0.425, would it be very surprising to get an estimate that is off by more than 0.05? Support your answer.**
+
+---
+Based on these results, it would be somewhat surprising, but not entirely unexpected, to get a sample proportion that differs from 0.425 by more than 0.05 with a sample size of 20, as the probability that this would occur is 0.3094
+
+**1(f) If we use a sample proportion, $P$, based on a sample of size $n = 500$, to estimate the population proportion, $\pi = 0.425$, would it be very surprising to get an estimate that is off by more than 0.05? Support your answer.**
+
+---
+
+It would be very unlikely that an estimate of the true proportion would differ by more than 0.05 with a sample size of 500; as the probability of this occurring is 0.0256, or in 2.56% of cases.
+
+**1(g)  Using parts information obtained in your answers above, comment on the effect that
+sample size has on the accuracy of an estimate.**
+
+---
+
+In both the cases of an interval of 0.10 and of 0.05, there is association of increasing sample sizes and decreasing probability of obtaining a more extreme estimate. It appears that, as the sample size increases, the variability of the sampling distribution becomes smaller, the range around which the proportions are distributed becomes narrower, and the chance of observing a more extreme value decreases.
+
+
+#Question 2: Maximum likelihood
+Suppose we sample of size of $n=222$ random adult individuals age 18-59 and determine that 98 individuals were infected with genital HPV.  
+
+**2(a) Draw the liklihood function for an estimate of the population parameter as a function of $\pi$ (with sample size $n=222$).**
+```{r}
+plot(seq(0.1, 0.9, length.out = 223), dbinom(c(0:222), size = 222, prob = 0.441, log = F), xlab = "Estimated Population Parameter", ylab = "Likelihood", main = "Likelihood Function of the Population Parameter")
+```
+
+**2(b) What is the maximum likelihood estimate of the population proportion based on the observed data?**
+
+---
+
+The MLE of the population proportion is 0.441.
+
+```{r}
+MLEfunSimp <- function(p){
+  prod(dbinom(x = 98, size = 222, prob = p, log = F))
+}
+
+MLE2b <- optimize(MLEfunSimp, interval = seq(0,1, by = 0.01), maximum = T)
+print(MLE2b$maximum)
+```
+
+**2(c) Suppose that the sample size is increased to $n=444$ random adults between the age of 18-59 and observe that 196 individuals were infected with gential HPV. How does the likelihood function change from that in 2(a)? Explain and/or show.**
+
+---
+The likelihood function becomes less variable, with a distribution more tightly clustered around the sample proportion of 0.441.
+
+```{r}
+
+plot(seq(0.1, 0.9, length.out = 223), dbinom(c(0:222), size = 222, prob = 0.441, log = F), xlab = "Estimated Population Parameter", ylab = "Likelihood", main = "Likelihood Function of the Population Parameter for 2(c)")
+```
+
+**2(d) What is the maximum likelihood estimate of the population proportion based on the
+observed data in 2(c)? How does it compare to the estimate in 2(b)?**
+---
+The maximum likelihood of the larger sample size is 0.0381, somewhat smaller than the maximum likelihood estimate of the smaller sample size, 0.0539.
+
+```{r}
+MLEfun <- function(y, n, p){
+  prod(dbinom(x = y, size = n, prob = p, log = F))
+}
+
+likeli1 <- MLEfun(98, 222, 0.441)
+print(likeli1)
+
+likeli2 <- MLEfun(196, 444, 0.441)
+print(likeli2)
+```
+
+#Question 3: Confidence interval for HPV
+Suppose that you obtain a random sample of adult individuals age 18-59 and determine whether they were infected with genital HPV ($\pi = 0.425$). Use the `R` function `binom.test()`. 
+
+**3(a) Use `R` to get a random sample of $n=20$ from adults  18-59. Determine the width of the exact 99\% confidence interval for $\pi$ for your sample. To get the width, you would subtract the lower bound of the 99\% confidence interval from the upper bound of the 99\% confidence interval.** 
+
+```{r}
+#Function for Question 3
+CIgenFun <- function(sampSize){
+  binom.test(x = as.integer(0.425 * sampSize), n = sampSize, p = 0.425, conf.level = 0.99)
+}
+
+Q3confint <- vector("list", 3) 
+Q3confint <- sapply(c(20, 100, 500), CIgenFun)
+```
+The width of the exact 99% confidence interval with a sample size of 20 when pi = 0.425 is:
+```{r}
+Q3confint[,1]$conf.int[2] - Q3confint[,1]$conf.int[1] %>%
+  round(3)
+```
+
+**3(b) Use R to get a random sample of n = 100 from adults 18-59. Determine the width of the exact 99% confidence interval for pi for your sample**
+---
+The width of the exact 99% confidence interval with a sample size of 100 when pi = 0.425 is:
+
+```{r}
+Q3confint[,2]$conf.int[2] - Q3confint[,2]$conf.int[1] %>%
+  round(3)
+```
+
+**3(c) Use `R` to get a random sample of $n=500$ from adults age 18-59. Determine the width of the exact 99\% confidence interval for $\pi$ for your sample.**
+---
+The width of the exact 99% confidence interval with a sample size of 500 when pi = 0.425 is:
+```{r}
+Q3confint[,3]$conf.int[2] - Q3confint[,3]$conf.int[1] %>%
+  round(3) 
+```
+
+**3(d)**
+---
+The widths of the respective exact 99% confidence intervals decrease as sample size increases - as the sample size quintuples, the width of the CI decreases at the same rate (~0.444), from 0.555 to 0.259 to 0.115.
+
+
+
+#Question 4: Hypothesis test for HPV
+
+**4(a)** 
+
+
+The code below generates a random sample, runs exact binomial tests, and outputs p-values and estimates of the sample proportion for the six pi values specified in question four.
+
+For question 4a, the sample proportion is 0.398, which is not significantly different from the population proportion (p = 0.585).
+
+```{r}
+#Functions for Question 4
+
+sampPropFun <- function(pi){
+  mean(rbinom(5000, 123, as.numeric(pi))/123)
+}
+
+Q4binomsPval <- function(prop){
+  binom.test(x = as.integer(prop * 123), n = 123, p = 0.425)$p.value
+}
+Q4estimate <- function(prop){
+  as.numeric(binom.test(x = as.integer(prop * 123), n = 123, p = 0.425)$estimate)
+}
+
+Q4SampProps <- sapply(c(0.405, 0.445, 0.385, 0.465, 0.365, 0.485), sampPropFun)
+
+Q4SamplesMethod2 <- rbind(sapply(c(Q4SampProps), Q4binomsPval)) %>%
+  round(3)
+Q4SamplesMethod2 <- rbind(Q4SamplesMethod2, sapply(c(Q4SampProps), Q4estimate)) %>%
+  round(3)
+colnames(Q4SamplesMethod2) <- c(0.405, 0.445, 0.385, 0.465, 0.365, 0.485) %>%
+  round(3)
+row.names(Q4SamplesMethod2) <- c("P-value", "Estimate of sample prop")
+print(Q4SamplesMethod2)
+```
+
+**4(b)**
+---
+The sample proportion obtained when pi = 0.445 is 0.439, which is not significantly different from the population proportion (p = 0.785).
+
+**4(c)  Use `R` to get a random sample of $n=123$ from a population of adults age 18-59 with $\pi=0.385$. Report the sample proportion and perform a test to determine whether it differs from $\pi=0.425$**
+---
+The sample proportion obtained when pi = 0.385 is 0.382, which is not significantly different from the population proportion (p = 0.362).
+
+**4(d)**
+---
+The sample proportion obtained with a population proportion of 0.465 is 0.463, which is not significantly different, with a p-value of 0.412.
+
+
+**4(e)  Use `R` to get a random sample of $n=123$ from a population of adults age 18-59 with $\pi=0.365$. Report the sample proportion and perform a test to determine whether it differs from $\pi=0.425$** 
+---
+Running an exact binomial test on a sample taken from a population at pi = 0.365 produces a sample proportion estimate of 0.358, which is not significantly different from the population proportion, with a p-value of 0.145.
+
+**4(f)**
+---
+The sample proportion obtained when pi = 0.485 is 0.480, with a p-value of 0.236, suggesting that there is not a significant difference between the two values.
+
+
+**4(g) Using parts information obtained in your answers above, comment on what you observe about the relationship between the sample proportion, the hypothesized $\pi$, and the $p$-value.**
+---
+The estimated population proportions differ from the true value (pi = 0.425) in increasing increments of 0.02, alternating between being greater than and less than the true proportion. (So for 4a-4f, the differences are as follows: +0.02 -0.02 +0.04 -0.04 +0.06 -0.06.) As the estimated population proportion becomes increasingly larger than the true value, the estimated sample proportion decreases, and conversely the estimated sample proportion increases as the estimated pi value increases. Finally, as the estimated sample proportion diverges more and more from the true value, the p-value decreases, which is what would be expected to occur as the difference moves towards significance.
+
+**5(a)**
+---
+The probabilities calculated from a normal approximation to the binomial (0.00013) and from an exact binomial test (0.00015) are very similar, only differing by .00002.
+```{r}
+meanQ5 <- (1000*0.25)
+sdQ5 <- sqrt(meanQ5*0.75)
+
+pnorm(300, mean = meanQ5, sd = sdQ5, lower.tail = F) %>%
+  round(5)
+pbinom(300, 1000, prob = 0.25, lower.tail = F) %>%
+  round(5)
+```
+
+**5(b) What is the probability that the death from smoking related disease will be between 238 and 245 cases in 1000 random women smokers? Again, compare the estimate obtained from a normal distribution to that obtained from the binomial distribution.**
+---
+
+As in Question 5a, the two methods of calculating the estimated probability produce very similar results: the probability from normal approximation of the binomial is 0.186, while the probability from performing an exact binomial test is 0.192.
+```{r}
+(pnorm(245, mean = meanQ5, sd = sdQ5) - pnorm(237, mean = meanQ5, sd = sdQ5)) %>%
+  round(3)
+(pbinom(245, 1000, prob = 0.25) - pbinom(237, 1000, prob = 0.25))%>%
+  round(3)
+```
+
+
+
+**5(c), 5(d)**
+
+---
+
+Both 5D and 5E are using sample proportions that, when converted according to the equation P = Y/n, would give the same answers as 5a and 5b, respectively. 
+
+**5(e)**
+---
+In this case, there is a greater different in the probabilities obtained from the normal approximation (0.319) and the exact binomial test (0.422).
+```{r}
+pnorm(5, mean = 6, sd = sqrt(4.5)) %>%
+  round(3)
+pbinom(5, size = 24, prob = 0.25) %>%
+  round(3)
+```
+
+
+**5(f) What is the probability that out of 24 women smokers between 5 and 9 will die from smoking related diseases? Use a normal approximation to the binomial to estimate this quantity and compare it to the exact probability from a binomial.**
+
+---
+
+As in question 5e, the lower sample size reduced the accuracy of the normal approximation of the binomial, which produced a probability of 0.748, compared to the exact binomial test result of 0.699.
+```{r}
+(pnorm(9, mean = 6, sd = sqrt(4.5)) - pnorm(4, mean = 6, sd = sqrt(4.5))) %>%
+  round(3)
+(pbinom(9, 24, prob = 0.25) - pbinom(4, 24, 0.25)) %>%
+  round(3)
+```
+
+**5(g)**
+
+---
+
+Both normal approximations to the binomial in which a larger sample size was used produced results that were similar to the exact binomial test of the same sample. The approximations using a small same size diverged more than the larger samples. Since higher sample sizes yielded more accurate results using normal approximations, it seems less appropriate to use this method in situations with lower samples sizes.
+
+
+#Question 6: Confidence interval data analysis
+
+**Dr. Smith has requested that you analyze the data provided to determine whether the hospital currently meets this cancer care quality metric for node examination in colorectal cancer patients.** 
+Write a short paragraph that summarizes your findings and answers Dr. Smith's request.
+
+*DATA*
+The data are in a file called `crc.csv`
+
+* `BMI`:	an indicator whether a person has a normal BMI (BMI less than or equal to 25) or an overweight BMI (BMI greater than 25)
+* `Nodes`:	the number of lymph nodes examined
+* `Year`:	year in which the patient underwent her/his colorectal cancer surgery
+
+```{r}
+crc <- read.csv(file = '../data/crc.csv')
+
+#number proportion of Nodes Examined >= 12 /450
+crc %>%
+select(Nodes) %>%
+  filter(Nodes >= 12) %>%
+  count() %>%
+  as.numeric() %>%
+  binom.test(x = ., n = 450, p = (./450))
+```
+
+  The confidence interval for the 2016-2017 period is 0.587 - 0.678. For the hospital to be in compliance with the 12-node standard, the 95% confidence interval would have to contain the population proportion, 0.75. However, because the upper bound of the confidence interval does not contain 0.75, the hospital is in a state of noncompliance for the period in question.
+  However, breaking down the analysis by year (below) reveals that the number of successes (in terms of cases where 12 or more lymph nodes were examined) increased year-to-year, and the upper bound of the confidence interval became closer to 0.75. This suggests the potential beginning of a trend towards compliance.
+
+```{r}
+crc %>%
+  select(Nodes, Year) %>%
+  filter(Nodes >= 12 & Year == "2016") %>%
+  count() %>%
+  as.numeric() %>%
+  binom.test(x = ., n = 225, p = (./225))
+
+crc %>%
+  select(Nodes, Year) %>%
+  filter(Nodes >= 12 & Year == "2017") %>%
+  count() %>%
+  as.numeric() %>%
+  binom.test(x = ., n = 225, p = (./225))
+```
+
+
+
+**7(a) Is there evidence that the reoperation rate at Hopevale Hospital differs from that of their peer institutions? Use a significance level of 0.05.**
+Perform an hypothesis test. Write your answer in a short paragraph that includes the p-value and an indication of how the rate differs (if it is statistically significant).
+
+---
+
+Based on the hypothesis test conducted (below), there is sufficient evidence to reject the null hypothesis (pi = 0.15, alternative hypothesis: pi does not = 0.15) at an alpha of 0.01 (p = 0.000696). Furthermore, the reoperation rate at this hospital appears to be significantly higher than at peer institutions - this can be seen in the 95% confidence interval (0.168 - 0.229). Since the lower bound of the confidence interval is greater than the population proportion, it is much more likely that the sample proportion is greater than the population proportion.
+
+```{r}
+breastCancerOutcomes <- read.csv(file = '../data/BreastCancerOutcomes.csv')
+# null 
+# H0: pi = 0.15
+# Ha: pi != 0.15
+
+Y <- breastCancerOutcomes %>%
+  select(reoperation) %>%
+  filter(reoperation == "yes") %>%
+  count() %>%
+  as.numeric()
+
+hypoTest7a <- binom.test(Y, n = 700, p = 0.15, conf.level = 0.95)
+```
+
+**7(b)**
+
+---
+
+   Breaking down the analysis into two groups based on the size of tumors reveals differences the relationship between the reoperation rates at Hopevale Hospital and its peer institutions. The exact binomial test revealed that reoperation rates for smaller tumors was not significant at alpha = 0.05 (p = 0.0885), with a 95% confidence interval of 0.0861 - 0.156.
+    However, performing the same analysis on the subset of reoperation patients with larger tumors shows a significantly higher reoperation rate compared to peer institutions at the 0.05 confidence level, with a p-value of 7.718e-10 and a confidence interval of 0.233-0.331. Since the lower bound of the confidence interval is greater than the population proportion it can be inferred that the reoperation rate for patients with larger tumors at Hopevale Hospital is significantly greater than at other hospitals.
+```{r}
+n1 <- breastCancerOutcomes %>%
+  filter(size == "less than 2") 
+Y1 <- n1 %>% 
+  filter(reoperation == "yes") %>%
+  count() %>%
+  as.numeric()
+
+#Exact Binomial tests for size < 2 cm (Y = 42 and n = 357)
+binom.test(x = Y1, n = 357, p = 0.15)
+
+n2 <- breastCancerOutcomes %>%
+  filter(size == "2 or greater") 
+Y2 <- n2 %>%
+  filter(reoperation == "yes") %>%
+  count() %>%
+  as.numeric()
+```
+
+**7(c) What is something that would be important to know regarding the tumor size at the peer hospitals?**
+
+Considering the above findings that the size of the tumor significantly affects the reoperation rate, it would logically be important to collect data on tumor size at peer institutions. With the current data we can only analyze how Hopevale compares in terms of reoperation rate, but it may be the case that including data on tumor size relative to reoperation rates at other hospitals in the analysis would change the nature of the comparison between Hopevale and its peer institutions.
